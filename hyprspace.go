@@ -16,7 +16,7 @@ import (
 )
 
 var name = ""
-var id = ""
+var id = "test"
 
 func run(logging bool, exe string, args ...string) {
 	var cmd execute.ExecTask
