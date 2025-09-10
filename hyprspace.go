@@ -59,7 +59,7 @@ func main() {
 	}
 
 	log.Println("Running hyprspace...")
-	run(true, "/usr/local/bin/hyprspace", "up", "--config", "/perm/hyprspace.json")
+	run(true, "/usr/local/bin/hyprspace", "up", "--config", "/perm/hyprspace.json", "--interface", "hs0")
 
 }
 
