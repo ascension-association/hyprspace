@@ -9,6 +9,7 @@ import (
 	"context"
 	"os"
 	"errors"
+	"encoding/json"
 
 	execute "github.com/alexellis/go-execute/v2"
 	"github.com/gokrazy/gokrazy"
@@ -46,6 +47,15 @@ func run(logging bool, exe string, args ...string) {
 	}
 }
 
+func loadJSON[T any](filename string) (T, error) {
+    var data T
+    fileData, err := os.ReadFile(filename)
+    if err != nil {
+        return data, err
+    }
+    return data, json.Unmarshal(fileData, &data)
+}
+
 func main() {
 	log.Println("Initializing network...")
 
@@ -55,6 +65,11 @@ func main() {
 	if _, err := os.Stat("/perm/hyprspace.json"); errors.Is(err, os.ErrNotExist) {
 		log.Println("Initializing hyprspace...")
 		run(true, "/usr/local/bin/hyprspace", "init", "--config", "/perm/hyprspace.json")
+	}
+
+	if len(id) > 0 {
+	    config, _ := loadJSON("/perm/hyprspace.json")
+	    log.Println(config.listenAddresses)
 	}
 
 	log.Println("Running hyprspace...")
