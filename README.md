@@ -36,6 +36,23 @@ gok edit
 }
 ```
 
+Note: if you want to enable SSH, make sure breakglass is added:
+
+```
+gok add github.com/gokrazy/breakglass
+gok add github.com/gokrazy/serial-busybox
+```
+
+And then enable it via:
+
+```
+"github.com/ascension-association/hyprspace": {
+	"GoBuildFlags": [
+		"-ldflags=-X main.ssh=enable -X main.id=QjYJafYS4zB..."
+	]
+}
+```
+
 5. Deploy to the gokrazy instance:
 
 ```

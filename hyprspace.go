@@ -8,6 +8,7 @@ import (
 	"log"
 	"context"
 	"os"
+	"os/exec"
 	"errors"
 	"strings"
 
@@ -17,6 +18,7 @@ import (
 
 var ip = "10.1.1.1"
 var id = ""
+var ssh = "disable"
 
 func run(logging bool, exe string, args ...string) {
 	var cmd execute.ExecTask
@@ -87,6 +89,17 @@ func main() {
 		run(false, "/usr/local/bin/busybox", "sysctl", "-w", "net.core.wmem_max=2048000")
 		run(true, "/usr/local/bin/busybox", "grep", "^  id:", "/perm/hyprspace-config.yaml")
 		run(true, "/usr/local/bin/hyprspace", "up", "utun0", "--config", "/perm/hyprspace-config.yaml")
+		if ssh == "enable" {
+			if _, err := os.Stat("/user/breakglass"); errors.Is(err, os.ErrNotExist) {
+				log.Println("Cannot enable SSH: breakglass not found")
+			} else {
+				log.Println("Running SSH...")
+				//run(false, "/user/breakglass", "-authorized_keys=/etc/breakglass.authorized_keys")
+				cmd := exec.Command("/user/breakglass", []string{"-authorized_keys=/etc/breakglass.authorized_keys"})
+		        svc = gokrazy.NewService(cmd).s
+		        go supervise(svc)
+			}
+		}
 	} else {
 		log.Println("No id provided. Exiting...")
 	}
