@@ -13,10 +13,11 @@ import (
 
 	execute "github.com/alexellis/go-execute/v2"
 	"github.com/gokrazy/gokrazy"
+	"github.com/hyprspace/hyprspace"
 )
 
 var name = ""
-var id = "test"
+var id = ""
 
 func run(logging bool, exe string, args ...string) {
 	var cmd execute.ExecTask
@@ -47,13 +48,15 @@ func run(logging bool, exe string, args ...string) {
 	}
 }
 
-func loadJSON[T any](filename string) (T, error) {
-    var data T
-    fileData, err := os.ReadFile(filename)
-    if err != nil {
-        return data, err
-    }
-    return data, json.Unmarshal(fileData, &data)
+type Peer struct {
+    Name string `json:"name"`
+    ID   string `json:"id"`
+}
+
+type Config struct {
+	ListenAddresses		[]string	`json:"listenAddresses"`
+	PrivateKey			string		`json:"privateKey"`
+	Peers				[]Peer  	`json:"peers"`
 }
 
 func main() {
@@ -68,12 +71,56 @@ func main() {
 	}
 
 	if len(id) > 0 {
-	    config, _ := loadJSON("/perm/hyprspace.json")
-	    log.Println(config.listenAddresses)
+		log.Println("Checking peer...")
+	    configData, err := os.ReadFile("/perm/hyprspace.json")
+	    if err != nil {
+            log.Fatalf("Error reading JSON file: %v", err)
+        }
+        config := Config{}
+        err = json.Unmarshal(configData, &config)
+        if err != nil {
+	        log.Fatalf("Error unmarshaling JSON: %v", err)
+        }
+
+        found := false
+        for _, peer := range config.Peers {
+            if peer.ID == id {
+                found = true
+            }
+        }
+
+        if !found {
+            log.Println("Adding peer...")
+            peers := config.Peers
+            if len(peers) > 0 {
+                // append peer
+                newPeer := Peer{ Name: name, ID: id }
+                peers = append(peers, newPeer)
+            } else {
+                // add peer
+                peers = []Peer{
+                    {Name: name, ID: id},
+                }
+            }
+
+            config.Peers = peers
+
+            configBytes, err := json.MarshalIndent(config, "", "  ")
+	        if err != nil {
+		        log.Fatalf("Error marshaling updated data: %v", err)
+	        }
+
+	        err = os.WriteFile("/perm/hyprspace.json", configBytes, 0644)
+	        if err != nil {
+		        log.Fatalf("Error writing updated JSON file: %v", err)
+	        }
+
+        }
+
+        log.Println("Running hyprspace...")
+    	//run(true, "/usr/local/bin/hyprspace", "up", "--config", "/perm/hyprspace.json", "--interface", "hs0")
+	} else {
+	    log.Println("No peer name/id provided. Exiting...")
 	}
-
-	log.Println("Running hyprspace...")
-	run(true, "/usr/local/bin/hyprspace", "up", "--config", "/perm/hyprspace.json", "--interface", "hs0")
-
 }
 
