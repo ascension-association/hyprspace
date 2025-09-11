@@ -57,7 +57,7 @@ func main() {
 		run(false, "/usr/local/bin/busybox", "touch", "/perm/hyprspace-config.yaml")
 		run(false, "/usr/local/bin/busybox", "chmod", "600", "/perm/hyprspace-config.yaml")
 		run(false, "/usr/local/bin/hyprspace", "init", "utun0", "--config", "/perm/hyprspace-config.yaml")
-		run(false, "/usr/local/bin/busybox", "sed", "-i", "'s/address: .*/address: 10.1.1.255\/24/'", "/perm/hyprspace-config.yaml")
+		run(false, "/usr/local/bin/busybox", "sed", "-i", "s/address: .*/address: 10.1.1.255\\/24/", "/perm/hyprspace-config.yaml")
 	}
 
 	// run hyprspace
