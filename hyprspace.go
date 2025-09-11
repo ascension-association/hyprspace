@@ -13,7 +13,6 @@ import (
 
 	execute "github.com/alexellis/go-execute/v2"
 	"github.com/gokrazy/gokrazy"
-	"github.com/hyprspace/hyprspace"
 )
 
 var name = ""
