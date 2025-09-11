@@ -59,31 +59,36 @@ func main() {
 		run(false, "/usr/local/bin/busybox", "touch", "/perm/hyprspace-config.yaml")
 		run(false, "/usr/local/bin/busybox", "chmod", "600", "/perm/hyprspace-config.yaml")
 		run(false, "/usr/local/bin/hyprspace", "init", "utun0", "--config", "/perm/hyprspace-config.yaml")
-		run(false, "/usr/local/bin/busybox", "sed", "-i", "s/address: .*/address: 10.1.1.255\\/24/", "/perm/hyprspace-config.yaml")
+		run(false, "/usr/local/bin/busybox", "sed", "-i", "s/address: .*/address: 10.1.1.222\\/24/", "/perm/hyprspace-config.yaml")
 	}
 
-	// run hyprspace
 	if len(id) > 0 {
+		// add peer
 		log.Println("Checking peer...")
-
 		var found bool = false
 		content, _ := os.ReadFile("/perm/hyprspace-config.yaml")
-        words := strings.Fields(string(content))
-        for _, word := range words {
-            if word == id {
-                found = true
-            }
-        }
-        if !found {
-            run(false, "/usr/local/bin/busybox", "sed", "-i", "s/peers: .*/peers:/", "/perm/hyprspace-config.yaml")
-            run(false, "/usr/local/bin/busybox", "echo", "  " + ip + ":", ">>", "/perm/hyprspace-config.yaml")
-            run(false, "/usr/local/bin/busybox", "echo", "    id: " + id, ">>", "/perm/hyprspace-config.yaml")
-        }
+		words := strings.Fields(string(content))
+		for _, word := range words {
+			if word == id {
+				found = true
+			}
+		}
+		if !found {
+		log.Println("Adding peer...")
+			run(false, "/usr/local/bin/busybox", "sed", "-i", "s/peers: .*/peers:/", "/perm/hyprspace-config.yaml")
+			file, _ := os.OpenFile("/perm/hyprspace-config.yaml", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+			file.WriteString("  " + ip + ":\n" + "    id: " + id + "\n")
+			file.Close()
+		}
 
-        log.Println("Running hyprspace...")
-    	run(true, "/usr/local/bin/hyprspace", "up", "utun0", "--config", "/perm/hyprspace-config.yaml")
+		// run hyprspace
+		log.Println("Running hyprspace...")
+		run(false, "/usr/local/bin/busybox", "sysctl", "-w", "net.core.rmem_max=2048000")
+		run(false, "/usr/local/bin/busybox", "sysctl", "-w", "net.core.wmem_max=2048000")
+		run(true, "/usr/local/bin/busybox", "grep", "^  id:", "/perm/hyprspace-config.yaml")
+		run(true, "/usr/local/bin/hyprspace", "up", "utun0", "--config", "/perm/hyprspace-config.yaml")
 	} else {
-	    log.Println("No id provided. Exiting...")
+		log.Println("No id provided. Exiting...")
 	}
 }
 
