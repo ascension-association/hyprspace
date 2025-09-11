@@ -1,6 +1,6 @@
 ## hyprspace for gokrazy
 
-This package contains the static build of https://github.com/hyprspace/hyprspace
+This package contains the static build of https://github.com/alecbcs/hyprspace
 
 This is an alternative to [tailscale in gokrazy](https://gokrazy.org/packages/tailscale/). It's slower and has less features but is simpler and decentralized.
 
@@ -9,32 +9,28 @@ This is an alternative to [tailscale in gokrazy](https://gokrazy.org/packages/ta
 1. On a different machine that you want to connect to/from, run hyprspace:
 
 ```
-wget https://github.com/hyprspace/hyprspace/releases/download/v0.11.0/hyprspace-x86_64-linux
-chmod +x hyprspace-x86_64-linux
-sudo ./hyprspace-x86_64-linux init --config ./mycomputer.json
+# https://github.com/alecbcs/hyprspace/releases/tag/v0.2.2
+curl -fsSL -o hyprspace https://github.com/alecbcs/hyprspace/releases/download/v0.2.2/hyprspace-v0.2.2-linux-amd64
+chmod +x hyprspace
+touch ./hyprspace-config.yaml && chmod 600 ./hyprspace-config.yaml
+./hyprspace init utun0 --config ./hyprspace-config.yaml
 ```
 
-2. That command will output something like:
+2. Get that machine's hyprspace ID: `grep id: ./hyprspace-config.yaml`
 
-> Add this entry to your other peers:
-> {
->   "name": "my-computer",
->   "id": "14D3KbRTkQV..."
-> }
-
-3. Install the gokrazy hyprspace client and configure:
+3. On the gokrazy machine, install hyprspace:
 
 ```
 gok add github.com/ascension-association/hyprspace
 gok edit
 ```
 
-4. Add the info from the prior command to the _PackageConfig_ section:
+4. Add the ID from the prior command to the _PackageConfig_ section:
 
 ```
 "github.com/ascension-association/hyprspace": {
     "GoBuildFlags": [
-        "-ldflags=-X main.name=my-computer -X main.id=12D3KooWRFTkQV..."
+        "-ldflags=-X main.id=QjYJafYS4zB..."
     ]
 }
 ```
