@@ -9,11 +9,13 @@ import (
 	"context"
 	"os"
 	"errors"
+	"strings"
 
 	execute "github.com/alexellis/go-execute/v2"
 	"github.com/gokrazy/gokrazy"
 )
 
+var ip = "10.1.1.1"
 var id = ""
 
 func run(logging bool, exe string, args ...string) {
@@ -63,6 +65,20 @@ func main() {
 	// run hyprspace
 	if len(id) > 0 {
 		log.Println("Checking peer...")
+
+		var found bool = false
+		content, _ := os.ReadFile("/perm/hyprspace-config.yaml")
+        words := strings.Fields(string(content))
+        for _, word := range words {
+            if word == id {
+                found = true
+            }
+        }
+        if !found {
+            run(false, "/usr/local/bin/busybox", "sed", "-i", "s/peers: .*/peers:/", "/perm/hyprspace-config.yaml")
+            run(false, "/usr/local/bin/busybox", "echo", "  " + ip + ":", ">>", "/perm/hyprspace-config.yaml")
+            run(false, "/usr/local/bin/busybox", "echo", "    id: " + id, ">>", "/perm/hyprspace-config.yaml")
+        }
 
         log.Println("Running hyprspace...")
     	run(true, "/usr/local/bin/hyprspace", "up", "utun0", "--config", "/perm/hyprspace-config.yaml")
