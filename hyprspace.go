@@ -8,12 +8,13 @@ import (
 	"log"
 	"context"
 	"os"
-	"os/exec"
 	"errors"
 	"strings"
+	"io"
 
 	execute "github.com/alexellis/go-execute/v2"
 	"github.com/gokrazy/gokrazy"
+	"github.com/gliderlabs/ssh"
 )
 
 var ip = "10.1.1.1"
@@ -94,10 +95,12 @@ func main() {
 				log.Println("Cannot enable SSH: breakglass not found")
 			} else {
 				log.Println("Running SSH...")
-				//run(false, "/user/breakglass", "-authorized_keys=/etc/breakglass.authorized_keys")
-				cmd := exec.Command("/user/breakglass", []string{"-authorized_keys=/etc/breakglass.authorized_keys"})
-		        svc = gokrazy.NewService(cmd).s
-		        go supervise(svc)
+                // unable to use breakglass, by design:
+                //  https://github.com/gokrazy/breakglass/blob/02513c1dabef87398006421b82e48be9cf712382/README.md?plain=1#L12-L14
+                ssh.Handle(func(s ssh.Session) {
+                     io.WriteString(s, "Hello world\n")
+                 })  
+                 log.Fatal(ssh.ListenAndServe(":2222", nil))
 			}
 		}
 	} else {
