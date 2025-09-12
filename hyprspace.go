@@ -11,15 +11,19 @@ import (
 	"errors"
 	"strings"
 	"io"
+	"os/exec"
+	"syscall"
+	"unsafe"
 
 	execute "github.com/alexellis/go-execute/v2"
 	"github.com/gokrazy/gokrazy"
 	"github.com/gliderlabs/ssh"
+	"github.com/creack/pty"
 )
 
 var ip = "10.1.1.1"
 var id = ""
-var ssh = "disable"
+var login = "ssh"
 
 func run(logging bool, exe string, args ...string) {
 	var cmd execute.ExecTask
@@ -48,6 +52,11 @@ func run(logging bool, exe string, args ...string) {
 	if res.ExitCode != 0 {
 		fmt.Errorf("Error: %v", res.Stderr)
 	}
+}
+
+func setWinsize(f *os.File, w, h int) {
+	syscall.Syscall(syscall.SYS_IOCTL, f.Fd(), uintptr(syscall.TIOCSWINSZ),
+		uintptr(unsafe.Pointer(&struct{ h, w, x, y uint16 }{uint16(h), uint16(w), 0, 0})))
 }
 
 func main() {
@@ -90,7 +99,7 @@ func main() {
 		run(false, "/usr/local/bin/busybox", "sysctl", "-w", "net.core.wmem_max=2048000")
 		run(true, "/usr/local/bin/busybox", "grep", "^  id:", "/perm/hyprspace-config.yaml")
 		run(true, "/usr/local/bin/hyprspace", "up", "utun0", "--config", "/perm/hyprspace-config.yaml")
-		if ssh == "enable" {
+		if login == "ssh" {
 			if _, err := os.Stat("/user/breakglass"); errors.Is(err, os.ErrNotExist) {
 				log.Println("Cannot enable SSH: breakglass not found")
 			} else {
@@ -98,9 +107,32 @@ func main() {
                 // unable to use breakglass, by design:
                 //  https://github.com/gokrazy/breakglass/blob/02513c1dabef87398006421b82e48be9cf712382/README.md?plain=1#L12-L14
                 ssh.Handle(func(s ssh.Session) {
-                     io.WriteString(s, "Hello world\n")
-                 })  
-                 log.Fatal(ssh.ListenAndServe(":2222", nil))
+		            cmd := exec.Command("top")
+		            ptyReq, winCh, isPty := s.Pty()
+		            if isPty {
+			            cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", ptyReq.Term))
+			            f, err := pty.Start(cmd)
+			            if err != nil {
+				            panic(err)
+			            }
+			            go func() {
+				            for win := range winCh {
+					            setWinsize(f, win.Width, win.Height)
+				            }
+			            }()
+			            go func() {
+				            io.Copy(f, s) // stdin
+			            }()
+			            io.Copy(s, f) // stdout
+			            cmd.Wait()
+		            } else {
+			            io.WriteString(s, "No PTY requested.\n")
+			            s.Exit(1)
+		            }
+	            })
+
+	            log.Println("starting ssh server on port 2222...")
+	            log.Fatal(ssh.ListenAndServe(":2222", nil))
 			}
 		}
 	} else {
