@@ -49,7 +49,7 @@ gok update
 7. On your local machine, add the remote machine as a hyprspace peer (replacing _'QmUw6cxguRED8z...'_ with the actual gokrazy instance id):
 
 ```
-sed -z 's/peers: {}/peers:\n  10.1.1.222:\n    id: QmUw6cxguRED8z.../' -i ~/hyprspace-config.yaml
+sed -z 's/peers: {}/peers:\n  10.1.1.2:\n    id: QmUw6cxguRED8z.../' -i ~/hyprspace-config.yaml
 ```
 
 8. Then run hyprspace:
