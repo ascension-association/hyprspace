@@ -18,6 +18,7 @@ import (
 	execute "github.com/alexellis/go-execute/v2"
 	"github.com/gokrazy/gokrazy"
 	"github.com/gliderlabs/ssh"
+	gossh "golang.org/x/crypto/ssh"
 	"github.com/creack/pty"
 )
 
@@ -107,7 +108,11 @@ func main() {
                 // unable to use breakglass, by design:
                 //  https://github.com/gokrazy/breakglass/blob/02513c1dabef87398006421b82e48be9cf712382/README.md?plain=1#L12-L14
                 ssh.Handle(func(s ssh.Session) {
-		            cmd := exec.Command("top")
+                    authorizedKey := gossh.MarshalAuthorizedKey(s.PublicKey())
+		            io.WriteString(s, fmt.Sprintf("public key used by %s:\n", s.User()))
+		            s.Write(authorizedKey)
+		            
+		            cmd := exec.Command("/bin/sh")
 		            ptyReq, winCh, isPty := s.Pty()
 		            if isPty {
 			            cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", ptyReq.Term))
@@ -129,10 +134,15 @@ func main() {
 			            io.WriteString(s, "No PTY requested.\n")
 			            s.Exit(1)
 		            }
+		            
+	            })
+	            
+	            publicKeyOption := ssh.PublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+		            return true // allow all keys, or use ssh.KeysEqual() to compare against known keys
 	            })
 
 	            log.Println("starting ssh server on port 2222...")
-	            log.Fatal(ssh.ListenAndServe(":2222", nil))
+	            log.Fatal(ssh.ListenAndServe(":2222", nil, publicKeyOption))
 			}
 		}
 	} else {
