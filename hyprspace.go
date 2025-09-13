@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strings"
 
 	execute "github.com/alexellis/go-execute/v2"
 	"github.com/gokrazy/gokrazy"
@@ -40,11 +41,11 @@ func run(logging bool, exe string, args ...string) {
 	res, err := cmd.Execute(context.Background())
 
 	if err != nil {
-		log.Errorf("Error: %v", err)
+		log.Panicf("Error: %v", err)
 	}
 
 	if res.ExitCode != 0 {
-		log.Errorf("Error: %v", res.Stderr)
+		log.Panicf("Error: %v", res.Stderr)
 	}
 }
 
