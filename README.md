@@ -6,7 +6,9 @@ This is an alternative to [tailscale in gokrazy](https://gokrazy.org/packages/ta
 
 ### Usage
 
-1. On a different machine that you want to connect to/from, initialize hyprspace:
+Hyprspace is a point-to-point VPN that directly connects two machines. In the example below I'll refer to "local machine" as your home computer and "remote machine" as your gokrazy device.
+
+1. On your local machine, initialize hyprspace:
 
 ```
 cd ~
@@ -17,16 +19,16 @@ touch ./hyprspace-config.yaml && chmod 600 ./hyprspace-config.yaml
 ./hyprspace init utun0 --config ./hyprspace-config.yaml
 ```
 
-2. Get that machine's hyprspace ID: `grep "^  id:" ./hyprspace-config.yaml`
+2. Get your local machine's hyprspace id: `grep "^  id:" ~/hyprspace-config.yaml`
 
-3. On the gokrazy machine, install hyprspace:
+3. Install hyprspace onto the remote machine:
 
 ```
 gok add github.com/ascension-association/hyprspace
 gok edit
 ```
 
-4. Add the ID from the prior command to the _PackageConfig_ section:
+4. Add the **id** from Step 2 to the _PackageConfig_ section:
 
 ```
 "github.com/ascension-association/hyprspace": {
@@ -36,35 +38,18 @@ gok edit
 }
 ```
 
-Note: if you want to enable SSH, make sure breakglass is added:
-
-```
-gok add github.com/gokrazy/breakglass
-gok add github.com/gokrazy/serial-busybox
-```
-
-And then enable it via:
-
-```
-"github.com/ascension-association/hyprspace": {
-	"GoBuildFlags": [
-		"-ldflags=-X main.ssh=enable -X main.id=QjYJafYS4zB..."
-	]
-}
-```
-
-5. Deploy to the gokrazy instance:
+5. Save and close the file, then deploy to the remote machine:
 
 ```
 gok update
 ```
 
-6. In the gokrazy dashboard, click on the link for _/user/hyprspace_ and note the **id** value in the _stdout_ section (e.g. id: QmUw6cxguRED8z...)
+6. In the gokrazy dashboard of the remote machine, click on the link for _/user/hyprspace_ and note the **id** value in the _stdout_ section (e.g. id: QmUw6cxguRED8z...)
 
-7. On your different machine, add the gokrazy peer:
+7. On your local machine, add the remote machine as a hyprspace peer (replacing _'QmUw6cxguRED8z...'_ with the actual gokrazy instance id):
 
 ```
-sed -z 's/peers: {}/peers:\n  10.1.1.222:\n    id: QmUw6cxguRED8z.../' -i ./hyprspace-config.yaml
+sed -z 's/peers: {}/peers:\n  10.1.1.222:\n    id: QmUw6cxguRED8z.../' -i ~/hyprspace-config.yaml
 ```
 
 8. Then run hyprspace:
@@ -76,5 +61,7 @@ sudo sysctl -w net.core.wmem_max=2048000
 sudo ./hyprspace up utun0 --config ./hyprspace-config.yaml
 ```
 
-9. After a moment, you should be able to ping the gokrazy instance: `ping 10.1.1.222`
+9. After a moment, you should be able to ping the remote machine: `ping 10.1.1.2`
+
+10. If successful, you can run `gok edit` and change the **Hostname** to `10.1.1.2`. Then no matter where in the world the remote machine exists as long as it has internet access you should be able to load the gokrazy web portal and/or run gok commands.
 

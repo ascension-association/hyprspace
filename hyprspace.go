@@ -4,18 +4,19 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"context"
-	"os"
 	"errors"
-	"strings"
+	"log"
+	"os"
 
 	execute "github.com/alexellis/go-execute/v2"
 	"github.com/gokrazy/gokrazy"
 )
 
-var ip = "10.1.1.1"
+var port = "8001"
+var ipGoKrazy = "10.1.1.2"
+var ipPeer = "10.1.1.1"
+var cidr = "24"
 var id = ""
 
 func run(logging bool, exe string, args ...string) {
@@ -23,27 +24,27 @@ func run(logging bool, exe string, args ...string) {
 
 	if logging {
 		cmd = execute.ExecTask{
-			Command:     exe,
-			Args:        args,
-			StreamStdio: true,
+			Command:		exe,
+			Args:			args,
+			StreamStdio:	true,
 		}
 	} else {
 		cmd = execute.ExecTask{
-			Command:     exe,
-			Args:        args,
-			StreamStdio: false,
-			DisableStdioBuffer: true,
+			Command:			exe,
+			Args:				args,
+			StreamStdio:		false,
+			DisableStdioBuffer:	true,
 		}
 	}
 
 	res, err := cmd.Execute(context.Background())
 
 	if err != nil {
-		fmt.Errorf("Error: %v", err)
+		log.Errorf("Error: %v", err)
 	}
 
 	if res.ExitCode != 0 {
-		fmt.Errorf("Error: %v", res.Stderr)
+		log.Errorf("Error: %v", res.Stderr)
 	}
 }
 
@@ -59,7 +60,8 @@ func main() {
 		run(false, "/usr/local/bin/busybox", "touch", "/perm/hyprspace-config.yaml")
 		run(false, "/usr/local/bin/busybox", "chmod", "600", "/perm/hyprspace-config.yaml")
 		run(false, "/usr/local/bin/hyprspace", "init", "utun0", "--config", "/perm/hyprspace-config.yaml")
-		run(false, "/usr/local/bin/busybox", "sed", "-i", "s/address: .*/address: 10.1.1.222\\/24/", "/perm/hyprspace-config.yaml")
+		run(false, "/usr/local/bin/busybox", "sed", "-i", "s/listen_port: 8001/listen_port: " + port + "/", "/perm/hyprspace-config.yaml")
+		run(false, "/usr/local/bin/busybox", "sed", "-i", "s/address: .*/address: " + ipGoKrazy + "\\/" + cidr + "/", "/perm/hyprspace-config.yaml")
 	}
 
 	if len(id) > 0 {
@@ -73,11 +75,11 @@ func main() {
 				found = true
 			}
 		}
-		if !found {
+		if !found && ipPeer != ipGoKrazy {
 		log.Println("Adding peer...")
 			run(false, "/usr/local/bin/busybox", "sed", "-i", "s/peers: .*/peers:/", "/perm/hyprspace-config.yaml")
 			file, _ := os.OpenFile("/perm/hyprspace-config.yaml", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-			file.WriteString("  " + ip + ":\n" + "    id: " + id + "\n")
+			file.WriteString("  " + ipPeer + ":\n" + "    id: " + id + "\n")
 			file.Close()
 		}
 
@@ -88,6 +90,6 @@ func main() {
 		run(true, "/usr/local/bin/busybox", "grep", "^  id:", "/perm/hyprspace-config.yaml")
 		run(true, "/usr/local/bin/hyprspace", "up", "utun0", "--config", "/perm/hyprspace-config.yaml")
 	} else {
-		log.Println("No id provided. Exiting...")
+		log.Fatalf("No hyprspace id provided. Exiting...")
 	}
 }
