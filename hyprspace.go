@@ -4,7 +4,6 @@
 package main
 
 import (
-	"log"
 	"errors"
 	"os/exec"
 	"bufio"
@@ -18,10 +17,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"os"
 	"strings"
 	"syscall"
+	"unsafe"
 
 	"github.com/gokrazy/gokapi"
 	"github.com/gokrazy/gokapi/ondeviceapi"
@@ -62,8 +61,6 @@ func loadAuthorizedKeys(path string) (map[string]bool, error) {
 	var b []byte
 	var err error
 	switch path {
-	case "ec2":
-		b, err = loadAWSEC2SSHKeys()
 	default:
 		b, err = ioutil.ReadFile(path)
 	}
