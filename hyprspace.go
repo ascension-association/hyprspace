@@ -10,13 +10,9 @@ import (
 	"os"
 	"errors"
 	"strings"
-	"io"
 
 	execute "github.com/alexellis/go-execute/v2"
 	"github.com/gokrazy/gokrazy"
-	
-	"github.com/gliderlabs/ssh"
-	gossh "golang.org/x/crypto/ssh"
 )
 
 var ip = "10.1.1.1"
@@ -91,21 +87,6 @@ func main() {
 		run(false, "/usr/local/bin/busybox", "sysctl", "-w", "net.core.wmem_max=2048000")
 		run(true, "/usr/local/bin/busybox", "grep", "^  id:", "/perm/hyprspace-config.yaml")
 		run(true, "/usr/local/bin/hyprspace", "up", "utun0", "--config", "/perm/hyprspace-config.yaml")
-		
-		// ssh
-		ssh.Handle(func(s ssh.Session) {
-		    authorizedKey := gossh.MarshalAuthorizedKey(s.PublicKey())
-		    io.WriteString(s, fmt.Sprintf("public key used by %s:\n", s.User()))
-		    s.Write(authorizedKey)
-	    })
-
-	    publicKeyOption := ssh.PublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
-		    return true // allow all keys, or use ssh.KeysEqual() to compare against known keys
-	    })
-
-	    log.Println("starting ssh server on port 2222...")
-	    log.Fatal(ssh.ListenAndServe(":2222", nil, publicKeyOption))
-	
 	} else {
 		log.Println("No id provided. Exiting...")
 	}
