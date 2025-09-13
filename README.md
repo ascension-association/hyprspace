@@ -52,13 +52,13 @@ gok update
 sed -z 's/peers: {}/peers:\n  10.1.1.2:\n    id: QmUw6cxguRED8z.../' -i ~/hyprspace-config.yaml
 ```
 
-8. Then run hyprspace:
+8. Then run hyprspace on your local machine:
 
 ```
 # https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes
 sudo sysctl -w net.core.rmem_max=2048000
 sudo sysctl -w net.core.wmem_max=2048000
-sudo ./hyprspace up utun0 --config ./hyprspace-config.yaml
+sudo ~/hyprspace up utun0 --config ~/hyprspace-config.yaml
 ```
 
 9. After a moment, you should be able to ping the remote machine: `ping 10.1.1.2`
