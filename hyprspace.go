@@ -17,9 +17,7 @@ import (
 
 	execute "github.com/alexellis/go-execute/v2"
 	"github.com/gokrazy/gokrazy"
-	"github.com/gliderlabs/ssh"
-	gossh "golang.org/x/crypto/ssh"
-	"github.com/creack/pty"
+
 )
 
 var ip = "10.1.1.1"
@@ -105,44 +103,21 @@ func main() {
 				log.Println("Cannot enable SSH: breakglass not found")
 			} else {
 				log.Println("Running SSH...")
-                // unable to use breakglass, by design:
+                // unable to use breakglass directly, by design:
                 //  https://github.com/gokrazy/breakglass/blob/02513c1dabef87398006421b82e48be9cf712382/README.md?plain=1#L12-L14
-                ssh.Handle(func(s ssh.Session) {
-                    authorizedKey := gossh.MarshalAuthorizedKey(s.PublicKey())
-		            io.WriteString(s, fmt.Sprintf("public key used by %s:\n", s.User()))
-		            s.Write(authorizedKey)
-		            
-		            cmd := exec.Command("/bin/sh")
-		            ptyReq, winCh, isPty := s.Pty()
-		            if isPty {
-			            cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", ptyReq.Term))
-			            f, err := pty.Start(cmd)
-			            if err != nil {
-				            panic(err)
-			            }
-			            go func() {
-				            for win := range winCh {
-					            setWinsize(f, win.Width, win.Height)
-				            }
-			            }()
-			            go func() {
-				            io.Copy(f, s) // stdin
-			            }()
-			            io.Copy(s, f) // stdout
-			            cmd.Wait()
-		            } else {
-			            io.WriteString(s, "No PTY requested.\n")
-			            s.Exit(1)
-		            }
-		            
-	            })
-	            
-	            publicKeyOption := ssh.PublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
-		            return true // allow all keys, or use ssh.KeysEqual() to compare against known keys
-	            })
-
-	            log.Println("starting ssh server on port 2222...")
-	            log.Fatal(ssh.ListenAndServe(":2222", nil, publicKeyOption))
+                
+                ssh := exec.Command("ssh", "192.168.31.192")
+	            //if args := flag.Args()[1:]; len(args) > 0 {
+		        //    ssh.Args = append(ssh.Args, args...)
+	            //}
+	            //log.Printf("%v", ssh.Args)
+	            ssh.Stdin = os.Stdin
+	            ssh.Stdout = os.Stdout
+	            ssh.Stderr = os.Stderr
+	            if err := ssh.Run(); err != nil {
+		            //return fmt.Errorf("%v: %v", ssh.Args, err)
+	            }
+                
 			}
 		}
 	} else {
