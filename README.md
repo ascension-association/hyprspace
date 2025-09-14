@@ -61,7 +61,7 @@ sudo sysctl -w net.core.wmem_max=2048000
 sudo ~/hyprspace up utun0 --config ~/hyprspace-config.yaml
 ```
 
-9. After a moment, you should be able to ping the remote machine: `ping 10.1.1.2`
+9. After a moment, you should be able to ping the remote machine from your local machine: `ping 10.1.1.2`
 
-10. If successful, you can run `gok edit` and change the **Hostname** to `10.1.1.2`. Then no matter where in the world the remote machine exists as long as it has internet access you should be able to load the gokrazy web portal and/or run gok commands.
+10. If successful, you can run `gok edit` on your local machine and change the **Hostname** to `10.1.1.2`. Then no matter where in the world the remote machine exists as long as it has internet access you should be able to start hyprspace on your local machine and then run gok commands, such as adding [breakglass](https://github.com/gokrazy/breakglass) for SSH access.
 
