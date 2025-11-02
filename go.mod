@@ -1,4 +1,4 @@
-module github.com/ascension-association/hyprspace
+module github.com/ascension-association/gk-hyprspace
 
 go 1.24
 

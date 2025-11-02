@@ -2,7 +2,7 @@
 
 This package contains the static build of https://github.com/alecbcs/hyprspace
 
-This is an alternative to [tailscale in gokrazy](https://gokrazy.org/packages/tailscale/). It's slower and has less features but is simpler and decentralized.
+This is an alternative to [tailscale in gokrazy](https://gokrazy.org/packages/tailscale/). It's a little slower and has less features but is simpler, decentralized, and **works behind firewalls**.
 
 ### Usage
 
@@ -24,14 +24,14 @@ touch ./hyprspace-config.yaml && chmod 600 ./hyprspace-config.yaml
 3. Install hyprspace onto the remote machine:
 
 ```
-gok add github.com/ascension-association/hyprspace
+gok add github.com/ascension-association/gk-hyprspace
 gok edit
 ```
 
 4. Add the **id** from Step 2 to the _PackageConfig_ section:
 
 ```
-"github.com/ascension-association/hyprspace": {
+"github.com/ascension-association/gk-hyprspace": {
 	"GoBuildFlags": [
 		"-ldflags=-X main.id=QjYJafYS4zB..."
 	]
